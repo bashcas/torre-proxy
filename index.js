@@ -1,6 +1,7 @@
 const express = require("express")
-const request = require("request")
 const cors = require("cors")
+const axios = require("axios")
+const request = require("request")
 const app = express()
 
 app.use(express.json())
@@ -12,35 +13,29 @@ app.use((req, res, next) => {
   next()
 })
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   const url = req.query.url
-  request({ url: url }, (err, response, body) => {
-    if (err) {
-      console.log(err)
-      res.send(err)
-    } else {
-      res.json(JSON.parse(body))
-    }
-  })
+  try {
+    const response = await axios.get(url)
+    res.json(response.data)
+  } catch (err) {
+    console.log("error", err)
+  }
 })
 
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
   const url = req.query.url
-  const body = JSON.stringify(req.body)
-  const options = {
-    url: url,
-    method: "POST",
-    body: body,
-    headers: { "Content-Type": "application/json" },
+  const ggid = req.headers["x-torre-ggid"]
+  try {
+    const response = await axios.post(url, req.body, {
+      headers: {
+        "x-torre-ggid": ggid,
+      },
+    })
+    res.json(response.data)
+  } catch (err) {
+    console.log("error", err)
   }
-  request(options, (err, response, body) => {
-    if (err) {
-      console.log(err)
-      res.send(err)
-    } else {
-      res.json(JSON.parse(body))
-    }
-  })
 })
 
 app.listen(8000, () => {
